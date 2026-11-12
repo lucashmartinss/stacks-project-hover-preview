@@ -11,7 +11,7 @@
     --stacks-link-hover: #bfd6f8;
   }
 
-  html, body, #stacks-hover-card {
+  html, html body, #stacks-hover-card {
     background-color: var(--stacks-bg);
     color: var(--stacks-text);
   }
@@ -24,7 +24,7 @@
     color: var(--stacks-link-hover);
   }
 
-  div#first-bar, nav#second-bar {
+  html div#first-bar, html nav#second-bar {
     background-color: var(--stacks-toolbar);
     border-bottom: 1px solid var(--stacks-border);
   }

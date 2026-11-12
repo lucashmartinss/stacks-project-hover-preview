@@ -76,12 +76,49 @@ try {
     return result.result.value;
   }
   const page = 'https://stacks.math.columbia.edu/tag/0B3I';
+  if (dark) {
+    await send('Page.enable');
+    await send('Page.addScriptToEvaluateOnNewDocument', { source: script + `
+      const themeObserver = new MutationObserver(() => {
+        if (!document.getElementById('stacks-hover-theme')) return;
+        window.darkThemeAppliedAt = performance.now();
+        themeObserver.disconnect();
+      });
+      themeObserver.observe(document, { childList: true, subtree: true });
+      document.addEventListener('readystatechange', () => {
+        if (document.readyState !== 'interactive') return;
+        window.themeBeforeReady = {
+          background: getComputedStyle(document.documentElement).backgroundColor,
+          body: getComputedStyle(document.body).backgroundColor,
+          toolbar: getComputedStyle(document.querySelector('#first-bar')).backgroundColor,
+          cardMounted: !!document.querySelector('#stacks-hover-card')
+        };
+      });
+    ` });
+  }
   await send('Page.navigate', { url: page });
   await until(() => evaluate(`location.href === '${page}' && !!document.querySelector('.env-proof')`), 'live proof page');
   await until(() => evaluate('!!document.querySelector(".env-proof .MathJax")'), 'initial page MathJax');
   await evaluate('new Promise(resolve => MathJax.Hub.Queue(() => { resolve(true); }))');
   await evaluate('document.fonts.ready.then(() => true)');
-  await evaluate(script);
+  if (dark) {
+    assert.deepEqual(await until(() => evaluate('window.themeBeforeReady'), 'dark theme before DOM ready'), {
+      background: 'rgb(44, 44, 44)',
+      body: 'rgb(44, 44, 44)',
+      toolbar: 'rgb(38, 38, 38)',
+      cardMounted: false
+    });
+    const firstPaint = await until(
+      () => evaluate('performance.getEntriesByName("first-paint")[0]?.startTime'),
+      'first paint timing'
+    );
+    const themeAppliedAt = await evaluate('window.darkThemeAppliedAt');
+    assert(Number.isFinite(themeAppliedAt) && themeAppliedAt <= firstPaint,
+      `Dark theme applied at ${themeAppliedAt} ms, first paint at ${firstPaint} ms`);
+    await until(() => evaluate('!!document.querySelector("#stacks-hover-card")'), 'dark preview UI');
+  } else {
+    await evaluate(script);
+  }
   await evaluate(`
     window.apiCalls = [];
     window.pointerLog = [];

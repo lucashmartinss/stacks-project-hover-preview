@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stacks Project Hover Preview (Soft Dark)
 // @namespace    https://stacks.math.columbia.edu/
-// @version      1.1.3
+// @version      1.1.4
 // @description  Read linked Stacks Project statements and proofs in a soft dark theme for the entire Stacks site.
 // @author       lucashmartinss
 // @license      MIT
@@ -9,17 +9,123 @@
 // @homepageURL  https://github.com/lucashmartinss/stacks-project-hover-preview
 // @source       https://github.com/lucashmartinss/stacks-project-hover-preview
 // @match        https://stacks.math.columbia.edu/*
-// @run-at       document-idle
+// @run-at       document-start
 // @grant        none
 // @sandbox      raw
 // @noframes
 // ==/UserScript==
 
-(() => {
+(async () => {
   'use strict';
 
   if (location.origin !== 'https://stacks.math.columbia.edu' ||
       document.getElementById('stacks-hover-card')) return;
+
+  // Apply the page theme before waiting for the hover UI to mount.
+  const darkStyle = document.createElement('style');
+  darkStyle.id = 'stacks-hover-theme';
+  darkStyle.textContent = `
+    @media screen {
+      :root {
+        color-scheme: dark;
+        --stacks-bg: #2c2c2c;
+        --stacks-raised: #343434;
+        --stacks-toolbar: #262626;
+        --stacks-text: #ceccc8;
+        --stacks-muted: #afadaa;
+        --stacks-border: #565452;
+        --stacks-link: #91b8ef;
+        --stacks-link-hover: #bfd6f8;
+      }
+
+      html, html body, #stacks-hover-card {
+        background-color: var(--stacks-bg);
+        color: var(--stacks-text);
+      }
+
+      a[href], a[href]:visited, #stacks-hover-card a[href] {
+        color: var(--stacks-link);
+      }
+
+      a[href]:hover, a[href]:focus-visible, #stacks-hover-card a[href]:hover {
+        color: var(--stacks-link-hover);
+      }
+
+      html div#first-bar, html nav#second-bar {
+        background-color: var(--stacks-toolbar);
+        border-bottom: 1px solid var(--stacks-border);
+      }
+
+      ul#crumbs li.active, ul#crumbs li + li::before, .text-muted,
+      .page-item.disabled .page-link, .form-control::placeholder {
+        color: var(--stacks-muted) !important;
+      }
+
+      .bg-white, .bg-light, .card, .modal-content, .dropdown-menu, .list-group-item,
+      .page-link, .page-item.disabled .page-link, .popover, .popover-header,
+      .popover-body, .tooltip-inner, .table-striped tbody tr:nth-of-type(odd),
+      .table-hover tbody tr:hover, .table .thead-light th, pre, code,
+      .editor-toolbar, .editor-preview, .editor-preview-side, .CodeMirror,
+      .form-control, .form-control:focus, .form-control:disabled, .custom-select,
+      input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+        background-color: var(--stacks-raised) !important;
+        color: var(--stacks-text) !important;
+        border-color: var(--stacks-border) !important;
+      }
+
+      .btn, .dropdown-item, .close, .text-dark, .editor-toolbar button,
+      .CodeMirror-cursor, #stacks-hover-card button {
+        color: var(--stacks-text) !important;
+      }
+
+      .btn-light, .btn-outline-secondary, .dropdown-item:hover, .dropdown-item:focus,
+      .dropdown-item.active, .nav-tabs .nav-link.active, .toggle label.toggle-on,
+      .toggle label.toggle-off, label.toggle-on:active, label.toggle-off:active {
+        background-color: var(--stacks-raised) !important;
+        color: var(--stacks-text) !important;
+        border-color: var(--stacks-border) !important;
+      }
+
+      .alert-warning { background-color: #41382a; color: #e4cfaa; border-color: #6a5941; }
+      .alert-danger { background-color: #452e2e; color: #f1bcbc; border-color: #785252; }
+      .alert-info, .alert-primary { background-color: #2e3a47; color: #c4dbf5; border-color: #4f667d; }
+      .alert-success { background-color: #2e3d33; color: #bbdbc5; border-color: #506d59; }
+
+      hr, table th, table td, .nav-tabs, .modal-header, .modal-footer,
+      .CodeMirror-cursor, .editor-toolbar, #stacks-hover-card, #stacks-hover-card header {
+        border-color: var(--stacks-border) !important;
+      }
+
+      #stacks-hover-card { box-shadow: 0 8px 28px #0007; }
+      #stacks-hover-card header { background-color: var(--stacks-raised); }
+      .MathJax .xypic [stroke="black"] { stroke: var(--stacks-text); }
+      .MathJax .xypic .MathJax[style*="color: black"] { color: var(--stacks-text) !important; }
+      .tag-info li::before, .tag-info a::before, .tag-info svg { filter: invert(0.8); }
+      #MathJax_Message {
+        background-color: var(--stacks-raised) !important;
+        color: var(--stacks-text) !important;
+        border-color: var(--stacks-border) !important;
+      }
+
+      :focus-visible { outline: 2px solid var(--stacks-link); outline-offset: 2px; }
+      ::selection { background-color: #425877; color: #f1efec; }
+    }
+  `;
+  if (!document.documentElement) {
+    await new Promise(resolve => {
+      const observer = new MutationObserver(() => {
+        if (!document.documentElement) return;
+        observer.disconnect();
+        resolve();
+      });
+      observer.observe(document, { childList: true });
+    });
+  }
+  (document.head ?? document.documentElement).append(darkStyle);
+  if (document.readyState === 'loading') {
+    await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
+  }
+  if (document.getElementById('stacks-hover-card')) return;
 
   const prefix = 'stacks-hover-preview:v1:';
   const maxBytes = 512 * 1024;
@@ -221,94 +327,7 @@
     #stacks-hover-body img { max-width: 100%; height: auto; }
     #stacks-hover-body .equation { overflow-x: auto; }
   `;
-  style.textContent += `
-    @media screen {
-      :root {
-        color-scheme: dark;
-        --stacks-bg: #2c2c2c;
-        --stacks-raised: #343434;
-        --stacks-toolbar: #262626;
-        --stacks-text: #ceccc8;
-        --stacks-muted: #afadaa;
-        --stacks-border: #565452;
-        --stacks-link: #91b8ef;
-        --stacks-link-hover: #bfd6f8;
-      }
-
-      html, body, #stacks-hover-card {
-        background-color: var(--stacks-bg);
-        color: var(--stacks-text);
-      }
-
-      a[href], a[href]:visited, #stacks-hover-card a[href] {
-        color: var(--stacks-link);
-      }
-
-      a[href]:hover, a[href]:focus-visible, #stacks-hover-card a[href]:hover {
-        color: var(--stacks-link-hover);
-      }
-
-      div#first-bar, nav#second-bar {
-        background-color: var(--stacks-toolbar);
-        border-bottom: 1px solid var(--stacks-border);
-      }
-
-      ul#crumbs li.active, ul#crumbs li + li::before, .text-muted,
-      .page-item.disabled .page-link, .form-control::placeholder {
-        color: var(--stacks-muted) !important;
-      }
-
-      .bg-white, .bg-light, .card, .modal-content, .dropdown-menu, .list-group-item,
-      .page-link, .page-item.disabled .page-link, .popover, .popover-header,
-      .popover-body, .tooltip-inner, .table-striped tbody tr:nth-of-type(odd),
-      .table-hover tbody tr:hover, .table .thead-light th, pre, code,
-      .editor-toolbar, .editor-preview, .editor-preview-side, .CodeMirror,
-      .form-control, .form-control:focus, .form-control:disabled, .custom-select,
-      input:not([type="checkbox"]):not([type="radio"]), select, textarea {
-        background-color: var(--stacks-raised) !important;
-        color: var(--stacks-text) !important;
-        border-color: var(--stacks-border) !important;
-      }
-
-      .btn, .dropdown-item, .close, .text-dark, .editor-toolbar button,
-      .CodeMirror-cursor, #stacks-hover-card button {
-        color: var(--stacks-text) !important;
-      }
-
-      .btn-light, .btn-outline-secondary, .dropdown-item:hover, .dropdown-item:focus,
-      .dropdown-item.active, .nav-tabs .nav-link.active, .toggle label.toggle-on,
-      .toggle label.toggle-off, label.toggle-on:active, label.toggle-off:active {
-        background-color: var(--stacks-raised) !important;
-        color: var(--stacks-text) !important;
-        border-color: var(--stacks-border) !important;
-      }
-
-      .alert-warning { background-color: #41382a; color: #e4cfaa; border-color: #6a5941; }
-      .alert-danger { background-color: #452e2e; color: #f1bcbc; border-color: #785252; }
-      .alert-info, .alert-primary { background-color: #2e3a47; color: #c4dbf5; border-color: #4f667d; }
-      .alert-success { background-color: #2e3d33; color: #bbdbc5; border-color: #506d59; }
-
-      hr, table th, table td, .nav-tabs, .modal-header, .modal-footer,
-      .CodeMirror-cursor, .editor-toolbar, #stacks-hover-card, #stacks-hover-card header {
-        border-color: var(--stacks-border) !important;
-      }
-
-      #stacks-hover-card { box-shadow: 0 8px 28px #0007; }
-      #stacks-hover-card header { background-color: var(--stacks-raised); }
-      .MathJax .xypic [stroke="black"] { stroke: var(--stacks-text); }
-      .MathJax .xypic .MathJax[style*="color: black"] { color: var(--stacks-text) !important; }
-      .tag-info li::before, .tag-info a::before, .tag-info svg { filter: invert(0.8); }
-      #MathJax_Message {
-        background-color: var(--stacks-raised) !important;
-        color: var(--stacks-text) !important;
-        border-color: var(--stacks-border) !important;
-      }
-
-      :focus-visible { outline: 2px solid var(--stacks-link); outline-offset: 2px; }
-      ::selection { background-color: #425877; color: #f1efec; }
-    }
-  `;
-  document.head.append(style);
+  document.head.append(style, darkStyle);
 
   const card = document.createElement('aside');
   card.id = 'stacks-hover-card';
