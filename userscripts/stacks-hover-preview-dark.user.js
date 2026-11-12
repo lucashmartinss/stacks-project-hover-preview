@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name         Stacks Project Hover Preview (Soft Dark)
 // @namespace    https://stacks.math.columbia.edu/
-// @version      1.1.0
+// @version      1.1.1
 // @description  Read linked Stacks Project statements and proofs in a soft dark theme for the entire Stacks site.
+// @homepageURL  https://github.com/lucashmartinss/stacks-project-hover-preview
 // @match        https://stacks.math.columbia.edu/*
 // @run-at       document-idle
 // @grant        none

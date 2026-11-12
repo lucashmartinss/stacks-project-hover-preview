@@ -2,10 +2,13 @@
 
 Hover over a Stacks Project tag link to read its statement and proof on the same page.
 
-- [Light](userscripts/stacks-hover-preview.user.js) keeps the site's appearance.
-- [Soft Dark](userscripts/stacks-hover-preview-dark.user.js) applies a charcoal theme to the site and preview.
+## Install
 
-Enable one edition at a time. Move into the preview to scroll or follow a reference. Keyboard focus opens the preview. Press **Down Arrow** to move into it or **Escape** to close it.
+1. With a userscript manager enabled in your browser, open [Light](https://raw.githubusercontent.com/lucashmartinss/stacks-project-hover-preview/main/userscripts/stacks-hover-preview.user.js) to keep the site's appearance or [Soft Dark](https://raw.githubusercontent.com/lucashmartinss/stacks-project-hover-preview/main/userscripts/stacks-hover-preview-dark.user.js) to apply a charcoal theme.
+2. Confirm the installation. If the link opens as plain text, copy the whole script into a new script in your manager and save it. Keep one edition enabled at a time.
+3. Open or reload the Stacks Project and hover over a tag link.
+
+Move into the preview to scroll or follow a reference. Keyboard focus opens the preview. Press **Down Arrow** to move into it or **Escape** to close it.
 
 ## API and cache
 
