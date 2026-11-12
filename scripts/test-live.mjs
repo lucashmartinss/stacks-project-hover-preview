@@ -1,16 +1,29 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { access, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, dirname, join } from 'node:path';
+import { basename, delimiter, dirname, join, resolve } from 'node:path';
 import { once } from 'node:events';
 import { setTimeout as delay } from 'node:timers/promises';
 
-const chromePath = process.argv[2];
-assert(chromePath, 'Pass the path to a Chromium executable.');
-const dark = process.argv.includes('--dark');
+async function findBrowser() {
+  const names = ['chromium', 'chromium-browser', 'google-chrome', 'chrome'];
+  const suffix = process.platform === 'win32' ? '.exe' : '';
+  for (const directory of (process.env.PATH ?? '').split(delimiter).filter(Boolean)) {
+    for (const name of names) {
+      const candidate = resolve(directory, name + suffix);
+      if (await access(candidate, constants.X_OK).then(() => true, () => false)) return candidate;
+    }
+  }
+  throw new Error('Chrome or Chromium was not found on PATH. Set CHROMIUM_PATH to the browser executable.');
+}
+
+const args = process.argv.slice(2);
+const dark = args.includes('--dark');
+const chromePath = args.find(arg => !arg.startsWith('-')) || process.env.CHROMIUM_PATH || await findBrowser();
 const scriptName = dark ? 'stacks-hover-preview-dark.user.js' : 'stacks-hover-preview.user.js';
-const script = await readFile(new URL('./' + scriptName, import.meta.url), 'utf8');
+const script = await readFile(new URL('../userscripts/' + scriptName, import.meta.url), 'utf8');
 const tempRoot = await realpath(tmpdir());
 const profile = await realpath(await mkdtemp(join(tempRoot, 'stacks-hover-test-')));
 assert.equal(dirname(profile), tempRoot);
