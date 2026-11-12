@@ -100,6 +100,21 @@ try {
   const card = '#stacks-hover-card';
   const body = '#stacks-hover-body';
   const key = 'stacks-hover-preview:v1:01WN';
+  await evaluate(`(() => {
+    const link = document.createElement('a');
+    link.id = 'self-reference-test';
+    link.href = location.pathname.toLowerCase() + '/?view=comments#comment';
+    link.textContent = 'Reference to the current tag';
+    (document.querySelector('#comments') ?? document.body).append(link);
+    link.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
+  })()`);
+  await delay(400);
+  assert(await evaluate(`document.querySelector('${card}').hidden`), 'Self-reference opened on hover');
+  await evaluate('document.querySelector("#self-reference-test").focus({ preventScroll: true })');
+  await delay(400);
+  assert(await evaluate(`document.querySelector('${card}').hidden`), 'Self-reference opened on focus');
+  assert.equal(await evaluate('apiCalls.length'), 0);
+  await evaluate('document.querySelector("#self-reference-test").remove()');
   if (dark) {
     assert.equal(await evaluate('getComputedStyle(document.body).backgroundColor'), 'rgb(44, 44, 44)');
     assert.equal(await evaluate('getComputedStyle(document.querySelector("#first-bar")).backgroundColor'), 'rgb(38, 38, 38)');

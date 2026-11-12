@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stacks Project Hover Preview (Soft Dark)
 // @namespace    https://stacks.math.columbia.edu/
-// @version      1.1.1
+// @version      1.1.2
 // @description  Read linked Stacks Project statements and proofs in a soft dark theme for the entire Stacks site.
 // @homepageURL  https://github.com/lucashmartinss/stacks-project-hover-preview
 // @match        https://stacks.math.columbia.edu/*
@@ -34,12 +34,15 @@
   const allowedClasses = /^(?:env-[a-z-]+|environment-identifier|equation|qed|tex-[a-z-]+|tag)$/;
 
   const tagURL = (tag) => new URL('/tag/' + tag, location.origin);
+  const tagFromPath = (path) => /^\/tag\/([0-9A-Z]{4})\/?$/i.exec(path)?.[1].toUpperCase();
+  const currentTag = tagFromPath(location.pathname);
 
   function getTag(link) {
     if (!link || card.contains(link) || !URL.canParse(link.href, document.baseURI)) return null;
     const url = new URL(link.href, document.baseURI);
     if (url.origin !== location.origin) return null;
-    return /^\/tag\/([0-9A-Z]{4})\/?$/i.exec(url.pathname)?.[1].toUpperCase() ?? null;
+    const tag = tagFromPath(url.pathname);
+    return tag && tag !== currentTag ? tag : null;
   }
 
   function readCache(tag) {
