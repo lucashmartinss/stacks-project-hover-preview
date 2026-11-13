@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stacks Project Hover Preview (Soft Dark)
 // @namespace    https://stacks.math.columbia.edu/
-// @version      1.1.4
+// @version      1.1.5
 // @description  Read linked Stacks Project statements and proofs in a soft dark theme for the entire Stacks site.
 // @author       lucashmartinss
 // @license      MIT
@@ -49,6 +49,11 @@
 
       a[href]:hover, a[href]:focus-visible, #stacks-hover-card a[href]:hover {
         color: var(--stacks-link-hover);
+      }
+
+      article .environment-identifier,
+      article .environment-identifier [data-tag] {
+        color: var(--stacks-text) !important;
       }
 
       html div#first-bar, html nav#second-bar {

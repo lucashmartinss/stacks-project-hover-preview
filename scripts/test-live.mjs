@@ -267,6 +267,19 @@ try {
   await until(() => evaluate(`!document.querySelector('${card}').hidden`), 'cached preview during retry cooldown');
   assert.equal(await evaluate('apiCalls.length'), 8);
   console.log('Cache hits, unchanged HTML, 304, changed HTML, and offline fallback passed.');
+  if (dark) {
+    const section = 'https://stacks.math.columbia.edu/tag/07PD';
+    await send('Page.navigate', { url: section });
+    const labelColors = await until(() => evaluate(`(() => {
+      if (location.href !== '${section}' || !document.querySelector('#stacks-hover-card')) return;
+      return ['/tag/07PI', '/tag/07PJ'].flatMap(path => {
+        const label = document.querySelector('article .environment-identifier[href="' + path + '"]');
+        return [label, label.querySelector('[data-tag]')].map(node => getComputedStyle(node).color);
+      });
+    })()`), 'dark lemma and proposition labels');
+    assert.deepEqual(labelColors, Array(4).fill('rgb(206, 204, 200)'));
+    console.log('Lemma and proposition labels use the dark theme text color.');
+  }
 } finally {
   socket?.close();
   chrome.kill();

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stacks Project Hover Preview
 // @namespace    https://stacks.math.columbia.edu/
-// @version      1.1.4
+// @version      1.1.5
 // @description  Read linked Stacks Project statements and proofs without leaving the page.
 // @author       lucashmartinss
 // @license      MIT

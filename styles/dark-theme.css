@@ -24,6 +24,11 @@
     color: var(--stacks-link-hover);
   }
 
+  article .environment-identifier,
+  article .environment-identifier [data-tag] {
+    color: var(--stacks-text) !important;
+  }
+
   html div#first-bar, html nav#second-bar {
     background-color: var(--stacks-toolbar);
     border-bottom: 1px solid var(--stacks-border);
